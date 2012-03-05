@@ -1,0 +1,9 @@
+Punctuation parenthesis_o		(		1		1
+Punctuation parenthesis_c		)		1		2
+Punctuation bracket_o		[		2		2
+Punctuation bracket_c		]		2		3
+Punctuation brace_o		{		3		2
+Punctuation brace_c		}		3		3
+Operator conditional question		?		4		2
+Operator conditional colon		:		4		4
+Error: Unrecognized character at line: 

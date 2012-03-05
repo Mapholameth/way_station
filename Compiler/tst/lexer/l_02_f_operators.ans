@@ -1,0 +1,13 @@
+Operator assignment shr		>>=		1		1
+Operator comparison greater_or_equal		>=		1		4
+Operator comparison less_or_equal		<=		1		6
+Operator comparison less		<		1		8
+Operator comparison greater		>		1		9
+Operator comparison less		<		1		10
+Operator comparison greater		>		1		11
+Operator comparison less		<		1		12
+Punctuation comma		,		1		13
+Forgotten period		.		1		14
+Forgotten period		.		1		15
+Operator comparison greater_or_equal		>=		1		16
+Operator comparison equal		==		1		18

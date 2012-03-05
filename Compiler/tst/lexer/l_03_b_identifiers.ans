@@ -1,0 +1,9 @@
+Identifier		abc012		1		1
+Identifier		abc_def		2		2
+Identifier		_abc_def		3		2
+Identifier		_abc_def012e		4		2
+Identifier		abc012		5		2
+Identifier		abc		6		2
+Operator arithmetic multiply		*		6		5
+Identifier		def		6		6
+Identifier		_abc_def012e		7		2

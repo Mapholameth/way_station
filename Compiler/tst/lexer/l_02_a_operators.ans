@@ -1,0 +1,15 @@
+Identifier		a		1		1
+Operator comparison equal		==		1		3
+Operator comparison equal		==		1		5
+Operator assignment equal		=		1		7
+Identifier		b		1		9
+Operator comparison equal		==		1		11
+Operator comparison equal		==		1		14
+Operator assignment equal		=		1		17
+Identifier		c		1		19
+Identifier		a		2		2
+Operator arrow		->		2		3
+Identifier		b		2		5
+Identifier		a		3		2
+Operator assignment shr		>>=		3		3
+Identifier		b		3		6

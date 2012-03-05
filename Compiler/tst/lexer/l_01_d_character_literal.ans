@@ -1,0 +1,6 @@
+Keyword char		char		1		1
+Identifier		a		1		6
+Operator assignment equal		=		1		8
+Literal integer number				1		11
+Punctuation semicolon		;		1		26
+Literal integer number		a		2		3
