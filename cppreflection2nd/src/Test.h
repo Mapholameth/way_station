@@ -3,15 +3,19 @@
 class Vector2
 {
 public:
-	float x;
-	float y;
+	void SetX(const float &x) { _x = x; }
+	void SetY(const float &y) { _y = y; }
+
+private:
+	float _x;
+	float _y;
 };
 
 class CFoo
 {
 public:
 	Vector2 position() const { return _position; }
-	void setPosition(const Vector2 &position) { _position = position; }
+	void SetPosition(const Vector2 &position) { _position = position; }
 
 private:
 	Vector2 _position;

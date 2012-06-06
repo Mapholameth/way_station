@@ -18,18 +18,18 @@ map<string, ClassInfo*> ClassInfo::_classInfos;
 map<string, PropertyInfo*> ClassInfo::_props;
 
 #define D2D_DECL_CLASS_INFO(CLASS_NAME)	\
-class TypedClassInfo##CLASS_NAME : public ClassInfo	\
-{	\
-public:	\
-	TypedClassInfo##CLASS_NAME()	\
+	class TypedClassInfo##CLASS_NAME : public ClassInfo	\
 	{	\
-		_classInfos[#CLASS_NAME] = &_instance;	\
-	}	\
-	virtual void* New() const { return Make<CLASS_NAME>::New(); }	\
-	char* Name() const { return #CLASS_NAME; }	\
-	static TypedClassInfo##CLASS_NAME _instance;	\
-};	\
-TypedClassInfo##CLASS_NAME TypedClassInfo##CLASS_NAME::_instance;	\
+	public:	\
+		TypedClassInfo##CLASS_NAME()	\
+		{	\
+			_classInfos[#CLASS_NAME] = &_instance;	\
+		}	\
+		virtual void* New() const { return Make<CLASS_NAME>::New(); }	\
+		char* Name() const { return #CLASS_NAME; }	\
+		static TypedClassInfo##CLASS_NAME _instance;	\
+	};	\
+	TypedClassInfo##CLASS_NAME TypedClassInfo##CLASS_NAME::_instance;	\
 
 
 
