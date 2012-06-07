@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <ostream>
+#include <string>
 using std::stringstream;
 using std::ostringstream;
 
@@ -24,6 +25,7 @@ D2D_DECLARE_INTEGRAL_TYPE(char)
 D2D_DECLARE_INTEGRAL_TYPE(int)
 D2D_DECLARE_INTEGRAL_TYPE(float)
 D2D_DECLARE_INTEGRAL_TYPE(bool)
+D2D_DECLARE_INTEGRAL_TYPE(std::string)
 
 template<typename T>
 class IsAbstract

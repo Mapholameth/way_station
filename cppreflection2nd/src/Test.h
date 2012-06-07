@@ -1,5 +1,13 @@
 #pragma once
 
+#include <string>
+#include <vector>
+#include <map>
+
+using std::string;
+using std::vector;
+using std::map;
+
 class Vector2
 {
 public:
@@ -9,11 +17,15 @@ public:
 	float GetX() const { return _x; }
 	float GetY() const { return _y; }
 	float GetFlag() const { return _flag; }
+	void SetStr(const string &str) { _str = str; }
+	string GetStr() const { return _str; }
 
 private:
 	float _x;
 	float _y;
 	bool _flag;
+	string _str;
+	vector<float> _array;
 };
 
 class CFoo
@@ -21,9 +33,15 @@ class CFoo
 public:
 	Vector2 GetPosition() const { return _position; }
 	void SetPosition(const Vector2 &position) { _position = position; }
+	Vector2* GetPtrPosition() const { return _ptrPosition; }
+	void SetPtrPosition(Vector2 *ptrPosition) { _ptrPosition = ptrPosition; }
+
+
 
 private:
 	Vector2 _position;
+	Vector2 *_ptrPosition;
+	vector<Vector2> _ArrPosition;
 };
 
 /*

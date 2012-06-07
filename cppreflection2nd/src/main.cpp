@@ -23,10 +23,14 @@ int main(int argc, char* argv[])
 	PropertyInfo *XInfo = ClassInfo::_classInfos[positionInfo->TypeName()]->Properties()["X"];
 	PropertyInfo *YInfo = ClassInfo::_classInfos[positionInfo->TypeName()]->Properties()["Y"];
 	PropertyInfo *FlagInfo = ClassInfo::_classInfos[positionInfo->TypeName()]->Properties()["Flag"];
+	PropertyInfo *StrInfo = ClassInfo::_classInfos[positionInfo->TypeName()]->Properties()["Str"];
+	PropertyInfo *ptrPositionInfo = ClassInfo::_classInfos["CFoo"]->Properties()["PtrPosition"];
 	XInfo->SetString(position, "2.0");
 	YInfo->SetString(position, "3.0");
 	FlagInfo->SetString(position, "true");
-	positionInfo->SetValue(foo, position);
+	StrInfo->SetString(position, "ololo");
+	positionInfo->SetValue(foo, position);	
+	ptrPositionInfo->SetValue(foo, &position);
 
 	printf("%s\r\n", XInfo->GetString(position).c_str());
 
@@ -35,7 +39,7 @@ int main(int argc, char* argv[])
 		printf("%s\r\n", i->first.c_str());
 		for (map<string, PropertyInfo*>::iterator j = i->second->Properties().begin(); j != i->second->Properties().end(); ++j)
 		{
-			printf("\t%s\r\n", j->first.c_str());
+			printf("\t%s\t%s\r\n", j->second->TypeName(), j->first.c_str());
 		}
 	}
 

@@ -16,7 +16,7 @@ public:
 	virtual bool Integral() = 0;
 };
 
-#define D2D_DECL_OWNED_PROPERTY_INFO(OWNER, TYPE, NAME)	\
+#define D2D_DECL_OWNED_PROPERTY_INFO_EX(OWNER, TYPE, NAME, SETTER, GETTER)	\
 class OwnedPropertyInfo##OWNER##NAME : public PropertyInfo	\
 {	\
 public:	\
@@ -30,18 +30,18 @@ public:	\
 	virtual void SetString(void* owner, const string &value)	\
 	{	\
 		OWNER *typedOwner = static_cast<OWNER*>(owner);	\
-		typedOwner->Set##NAME(From<TYPE>::String(value));	\
+		typedOwner->SETTER(From<TYPE>::String(value));	\
 	}	\
 	virtual void SetValue(void* owner, void *property)	\
 	{	\
 		OWNER *typedOwner = static_cast<OWNER*>(owner);	\
 		TYPE *typedProperty = static_cast<TYPE*>(property);	\
-		typedOwner->Set##NAME(*typedProperty);	\
+		typedOwner->SETTER(*typedProperty);	\
 	}	\
 	string GetString(void* owner)	\
 	{	\
 		OWNER *typedOwner = static_cast<OWNER*>(owner);	\
-		return To<TYPE>::String(typedOwner->Get##NAME());	\
+		return To<TYPE>::String(typedOwner->GETTER());	\
 	}	\
 	bool Integral()	\
 	{	\
@@ -50,4 +50,7 @@ public:	\
 	static OwnedPropertyInfo##OWNER##NAME _instance;	\
 };	\
 OwnedPropertyInfo##OWNER##NAME OwnedPropertyInfo##OWNER##NAME::_instance;	\
+
+#define D2D_DECL_OWNED_PROPERTY_INFO(OWNER, TYPE, NAME)	\
+	D2D_DECL_OWNED_PROPERTY_INFO_EX(OWNER, TYPE, NAME, Set##NAME, Get##NAME)	\
 
