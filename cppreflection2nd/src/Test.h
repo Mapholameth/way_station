@@ -4,17 +4,22 @@ class Vector2
 {
 public:
 	void SetX(const float &x) { _x = x; }
-	void SetY(const float &y) { _y = y; }
+	void SetY(const float &y) { _y = y; }	
+	void SetFlag(const bool &flag) { _flag = flag; }
+	float GetX() const { return _x; }
+	float GetY() const { return _y; }
+	float GetFlag() const { return _flag; }
 
 private:
 	float _x;
 	float _y;
+	bool _flag;
 };
 
 class CFoo
 {
 public:
-	Vector2 position() const { return _position; }
+	Vector2 GetPosition() const { return _position; }
 	void SetPosition(const Vector2 &position) { _position = position; }
 
 private:
