@@ -120,6 +120,12 @@ namespace VariantConvert
 				return s.str();
 		}
 
+		template <>
+		string to_string_impl(const bool& t)
+		{
+			return t ? "true" : "false";
+		}
+
 
 }       //      namespace VariantConvert
 
