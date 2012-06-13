@@ -9,11 +9,9 @@ class PropertyInfo
 public:
 	virtual char* Name() const = 0;
 	virtual char* TypeName() const = 0;
-	virtual char* OwnerName() const = 0;
-	virtual void SetString(void *owner, const string &value) = 0;	// put into class info
+	virtual char* OwnerName() const = 0;	
 	virtual void SetValue(void *owner, void *property) = 0;
 	virtual void* GetValue(void *owner) = 0;
-	virtual string GetString(void* owner) = 0;	// put into class info
 	virtual bool Integral() = 0;
 	virtual bool IsArray() = 0;
 	virtual void PushValue(void *owner, void *value) = 0;
@@ -27,16 +25,11 @@ class OwnedPropertyInfo##OWNER##NAME : public PropertyInfo	\
 public:	\
 	OwnedPropertyInfo##OWNER##NAME()	\
 	{	\
-		ClassInfo::_classInfos[#OWNER]->Properties()[#NAME] = &_instance;	\
+		TypeInfo::GetTypeInfo(#OWNER)->Properties()[#NAME] = &_instance;	\
 	}	\
 	virtual char* Name() const { return #NAME; }	\
 	virtual char* TypeName() const { return #TYPE; }	\
 	virtual char* OwnerName() const { return #OWNER; }	\
-	virtual void SetString(void* owner, const string &value)	\
-	{	\
-		OWNER *typedOwner = static_cast<OWNER*>(owner);	\
-		typedOwner->SETTER(From<TYPE>::String(value));	\
-	}	\
 	virtual void SetValue(void* owner, void *property)	\
 	{	\
 		OWNER *typedOwner = static_cast<OWNER*>(owner);	\
@@ -48,11 +41,6 @@ public:	\
 		TYPE *value = new TYPE;	\
 		*value = static_cast<OWNER*>(owner)->GETTER();	\
 		return value;	\
-	}	\
-	string GetString(void* owner)	\
-	{	\
-		OWNER *typedOwner = static_cast<OWNER*>(owner);	\
-		return To<TYPE>::String(typedOwner->GETTER());	\
 	}	\
 	bool Integral()	\
 	{	\
@@ -78,24 +66,16 @@ class OwnedPropertyInfo##OWNER##NAME : public PropertyInfo	\
 public:	\
 	OwnedPropertyInfo##OWNER##NAME()	\
 	{	\
-		ClassInfo::_classInfos[#OWNER]->Properties()[#NAME] = &_instance;	\
+		TypeInfo::GetTypeInfo(#OWNER)->Properties()[#NAME] = &_instance;	\
 	}	\
 	virtual char* Name() const { return #NAME; }	\
 	virtual char* TypeName() const { return #TYPE; }	\
 	virtual char* OwnerName() const { return #OWNER; }	\
-	virtual void SetString(void* owner, const string &value)	\
-	{	\
-		throw("pizdec");	\
-	}	\
 	virtual void SetValue(void* owner, void *property)	\
 	{	\
 		throw("pizdec");	\
 	}	\
 	void* GetValue(void *owner) { throw "pizdec"; };	\
-	string GetString(void* owner)	\
-	{	\
-		throw("pizdec");	\
-	}	\
 	bool Integral()	\
 	{	\
 		return false;	\

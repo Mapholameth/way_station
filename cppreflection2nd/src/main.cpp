@@ -1,55 +1,192 @@
 #include <cstdlib>
 #include <cstdio>
+#include <sys/stat.h>
 #include "ClassInfo.h"
 #include "Test.h"
 #include "Reg.h"
+#include <rapidjson/rapidjson.h>
+#include <rapidjson/document.h>
+
 using std::pair;
 
-void repT(int n)
+/**
+ *	goals:
+ *	X	RTTI by name
+ *	X	property by name
+ *	X	ineritance info for props
+ *	X	integral type properties
+ *		safety
+ *	-	named cast	-	practically impossible to achieve
+ *	X	array properies
+ *		ptr to type properties
+ *		multiple (de)serialization methods
+ *		multiple inheritance
+ *		RTTI::IsKindOf(foo, bar)
+ *		Casted call
+ */
+
+/* shall be handy for some test
+
+typedef void (*FooCall)(const CFoo &foo);
+
+void TestFooCall(const CFoo &foo)
 {
-	for(int i = 0; i < n; i++)
-		printf("\t");
+	printf( "does nothing\r\n");
 }
 
-static int ident = 0;
+*/
 
-void Show(void *o, char* name)
+void ShowToFile(void *o, char* name, char* filename)
 {
-	repT(ident); printf("{\r\n");
-	map<string, PropertyInfo*> &props = ClassInfo::_classInfos[name]->Properties();
-	for (map<string, PropertyInfo*>::iterator i = props.begin(); i != props.end(); ++i)
+
+	class CStateInfo
 	{
-		if (i->second->Integral())
+	public:
+		int depth;
+		string s;
+
+		CStateInfo() : depth(0), s("") {}
+		void SaveToFile(const string& filename)
 		{
-			repT(ident+1); printf("\"%s\" : \"%s\",\r\n", i->second->Name(), i->second->GetString(o).c_str());
+			FILE* fo = fopen(filename.c_str(), "w");
+			fprintf(fo, "%s", s.c_str());
+			fclose(fo);
 		}
-		else if (i->second->IsArray())
+	};
+
+	struct T
+	{
+		static string RepeatString(string str, unsigned count)
 		{
-			repT(ident+1); printf("\"%s\" : \r\n", i->second->Name());
-			repT(ident+1); printf("[\r\n");
-			ident++;
-			for (int j = 0; j < i->second->GetArraySize(o); j++)
+			string r = "";
+			while (count)
+				r += str, count--;
+			return r;
+		}
+
+		static void Helper(CStateInfo& state, void* next, const string &nextName)
+		{
+			state.s += RepeatString("\t", state.depth);
+			state.s += "{\n";
+			state.depth++;
+
+			TypeInfo *typeInfo = TypeInfo::GetTypeInfo(nextName);
+			while (typeInfo)
 			{
-				void *value = i->second->GetValue(o, j);
-				repT(ident+1); printf("\"%f\",\r\n", *(static_cast<float*>(value)));
-				delete value;
+				map<string, PropertyInfo*> &props = typeInfo->Properties();
+				for (map<string, PropertyInfo*>::iterator i = props.begin(); i != props.end(); ++i)
+				{
+					if (i->second->Integral())
+					{
+						void *value = i->second->GetValue(next);
+						std::string stringTypeName = i->second->TypeName();
+						TypeInfo* typeInfo = TypeInfo::GetTypeInfo(stringTypeName);
+						std::string stringValue = typeInfo->GetString(value);
+						state.s += RepeatString("\t", state.depth) +
+								   "\"" +
+								   i->second->Name() +
+								   "\" : \"" +
+								   stringValue.c_str() +
+								   "\",\n";
+					}
+					else if (i->second->IsArray())
+					{
+						state.s += RepeatString("\t", state.depth) +
+								   "\"" +
+								   i->second->Name() +
+								   "\" : \n" +
+								   RepeatString("\t", state.depth) +
+								   "[\n";
+						state.depth++;
+						for (int j = 0; j < i->second->GetArraySize(next); j++)
+						{
+							void *value = i->second->GetValue(next, j);
+							char floatStr[256];
+							sprintf(floatStr, "%f", *(static_cast<float*>(value)));
+							state.s += RepeatString("\t", state.depth) +
+									   "\"" +
+									   floatStr +
+									   "\",\n";
+							delete value;
+						}
+						state.depth--;
+						state.s += RepeatString("\t", state.depth) +
+								   "],\n";
+					}
+					else
+					{
+						state.s += RepeatString("\t", state.depth) +
+								   "\"" +
+								   i->second->Name() +
+								   "\" : \n";
+						void *value = i->second->GetValue(next);
+						Helper(state, value, i->second->TypeName());
+						delete value;
+					}
+				}
+				typeInfo = typeInfo->BaseInfo();
 			}
-			ident--;
-			repT(ident+1); printf("],\r\n");
+			state.depth--;
+			state.s += RepeatString( "\t", state.depth );
+			state.s += "},\n";
 		}
-		else
+	};
+
+	CStateInfo state;
+	//state.s += (string)"\"" + name + "\" : \n";
+	T::Helper(state, o, name);
+	state.SaveToFile(filename);
+}
+
+
+void* EatShitFromJSONToCFoo(char* typeName, char* filename)
+{
+	void *result = NULL;
+	rapidjson::Document document;
+	char* buffer;
+	FILE* fi = fopen(filename, "rb");
+	struct stat FileStat;
+	stat(filename, &FileStat);
+	buffer = new char [FileStat.st_size + 1];
+	buffer[FileStat.st_size] = 0;
+	fread(buffer, 1, FileStat.st_size, fi);
+	fclose(fi);
+	document.Parse<0>(buffer);
+	//bool isObject = document.IsObject();
+	class T
+	{
+	public:
+		static void* Helper(rapidjson::Document::ValueType* document, char *nextName)
 		{
-			repT(ident+1); printf("\"%s\" : \r\n", i->second->Name());
-			void *value = i->second->GetValue(o);
-			ident++;
-			Show(value, i->second->TypeName());
-			ident--;
-			delete value;
+			bool isObject = document->IsObject();
+			TypeInfo *typeInfo = TypeInfo::GetTypeInfo(nextName);
+			void *next = typeInfo->New();
+			for (rapidjson::Document::ValueType::MemberIterator i = document->MemberBegin(); i != document->MemberEnd(); ++i)
+			{
+				std::string propertyName = i->name.GetString();
+				PropertyInfo *prop = typeInfo->FindProperty(propertyName);
+				if (i->value.IsObject())
+				{
+					prop->SetValue(next, Helper(&(i->value), prop->TypeName()));
+				}
+				else if( i->value.IsArray())
+				{
+				}
+				else
+				{
+					TypeInfo *tempTypeInfo = TypeInfo::GetTypeInfo(prop->TypeName());
+					void *temp = tempTypeInfo->New();
+					tempTypeInfo->SetString(temp, i->value.GetString());
+					prop->SetValue(next, temp);
+					delete temp;
+				}
+			}
+			return next;
 		}
-	}
-	if (ClassInfo::_classInfos[name]->BaseInfo())
-		Show(o, ClassInfo::_classInfos[name]->BaseInfo()->Name());
-	repT(ident); printf("},\r\n");
+	};
+
+	result = T::Helper(&document, typeName);
+	return result;
 }
 
 int main(int argc, char* argv[])
@@ -64,7 +201,7 @@ int main(int argc, char* argv[])
 		}
 	}
 	*/
-	CFoo *foo = (CFoo*)ClassInfo::_classInfos["CFoo"]->New();
+	CFoo *foo = (CFoo*)TypeInfo::GetTypeInfo("CFoo")->New();
 	/*
 	PropertyInfo *positionInfo = ClassInfo::_classInfos["CFoo"]->Properties()["Position"];
 	void* position = ClassInfo::_classInfos[positionInfo->TypeName()]->New();
@@ -99,10 +236,21 @@ int main(int argc, char* argv[])
 	}
 	*/
 	//Show(foo, "CFoo");
+
 	CBarDerived bar;
-	Show(&bar, "CBarDerived");
+	try
+	{
+		//ShowToFile(&bar, "CBarDerived", "dump.json");
+		void* value = EatShitFromJSONToCFoo("CBarDerived", "dump.json");
+		ShowToFile(value, "CBarDerived", "diff.json");
+	}
+	catch(char* pizdec)
+	{
+		printf("PIZDEC: %s\r\n", pizdec);
+	}
+
 	//Show(&bar, "CFoo");
-//	printf("%s\r\n%s\r\n%s\r\n", position->Name(), position->OwnerName(), position->TypeName());	
+	//	printf("%s\r\n%s\r\n%s\r\n", position->Name(), position->OwnerName(), position->TypeName());
 
 	system("pause");
 	return EXIT_SUCCESS;
