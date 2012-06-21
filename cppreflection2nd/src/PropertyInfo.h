@@ -1,8 +1,9 @@
 #pragma once
 
 #include <string>
-using std::string;
 #include "Util.h"
+
+using std::string;
 
 class PropertyInfo
 {
@@ -19,17 +20,67 @@ public:
 	virtual void* GetValue(void *owner, unsigned index) = 0;
 };
 
-#define D2D_DECL_OWNED_PROPERTY_INFO_EX(OWNER, TYPE, NAME, SETTER, GETTER)	\
-class OwnedPropertyInfo##OWNER##NAME : public PropertyInfo	\
-{	\
-public:	\
-	OwnedPropertyInfo##OWNER##NAME()	\
+#define _D2D_BEGIN_DECLARE_PROPERTY(OWNER, NAME)	\
+	class OwnedPropertyInfo##OWNER##NAME : public PropertyInfo	\
 	{	\
-		TypeInfo::GetTypeInfo(#OWNER)->Properties()[#NAME] = &_instance;	\
-	}	\
-	virtual char* Name() const { return #NAME; }	\
-	virtual char* TypeName() const { return #TYPE; }	\
-	virtual char* OwnerName() const { return #OWNER; }	\
+	public:	\
+
+#define _D2D_DECLAREE_PROPERTY_BASE(OWNER, TYPE, NAME)	\
+		OwnedPropertyInfo##OWNER##NAME()	\
+		{	\
+			TypeInfo::GetTypeInfo(#OWNER)->Properties()[#NAME] = &_instance;	\
+		}	\
+		virtual char* Name() const { return #NAME; }	\
+		virtual char* TypeName() const { return #TYPE; }	\
+		virtual char* OwnerName() const { return #OWNER; }	\
+
+#define _D2D_END_DECLARE_PROPERTY(OWNER, NAME)	\
+		static OwnedPropertyInfo##OWNER##NAME _instance;	\
+	};	\
+	OwnedPropertyInfo##OWNER##NAME OwnedPropertyInfo##OWNER##NAME::_instance;	\
+
+#define D2D_DECLARE_PROPERTY_INFO_EX(OWNER, TYPE, NAME, SETTER, GETTER)	\
+	_D2D_BEGIN_DECLARE_PROPERTY(OWNER, NAME)	\
+	_D2D_DECLAREE_PROPERTY_BASE(OWNER, TYPE, NAME)	\
+		virtual void SetValue(void* owner, void *property)	\
+		{	\
+			OWNER *typedOwner = static_cast<OWNER*>(owner);	\
+			TYPE *typedProperty = static_cast<TYPE*>(property);	\
+			typedOwner->SETTER(*typedProperty);	\
+		}	\
+		void* GetValue(void *owner)	\
+		{	\
+			TYPE *value = new TYPE;	\
+			*value = static_cast<OWNER*>(owner)->GETTER();	\
+			return value;	\
+		}	\
+		bool Integral() { return IsIntegral<TYPE>::result; }	\
+		bool IsArray() { return false;	}	\
+		void PushValue(void *owner, void *value) { throw "pizdec"; }	\
+		unsigned GetArraySize(void *owner) { throw "pizdec"; }	\
+		void* GetValue(void *owner, unsigned index) { throw "pizdec"; }	\
+	_D2D_END_DECLARE_PROPERTY(OWNER, NAME)	\
+
+#define D2D_DECLARE_ARRAY_PROPERTY_INFO_EX(OWNER, TYPE, NAME, PUSHER, GETTER, SIZEGETTER)	\
+	_D2D_BEGIN_DECLARE_PROPERTY(OWNER, NAME)	\
+	_D2D_DECLAREE_PROPERTY_BASE(OWNER, TYPE, NAME)	\
+		virtual void SetValue(void* owner, void *property) { throw("pizdec"); }	\
+		void* GetValue(void *owner) { throw "pizdec"; };	\
+		bool Integral() { return false; }	\
+		bool IsArray() { return true; }	\
+		void PushValue(void *owner, void *value) { static_cast<OWNER*>(owner)->PUSHER(*(static_cast<TYPE*>(value)));	}	\
+		unsigned GetArraySize(void *owner) { return static_cast<OWNER*>(owner)->SIZEGETTER(); }	\
+		void* GetValue(void *owner, unsigned index)	\
+		{	\
+			TYPE *value = new TYPE;	\
+			*value = static_cast<OWNER*>(owner)->GETTER(index);	\
+			return value;	\
+		}	\
+	_D2D_END_DECLARE_PROPERTY(OWNER, NAME)	\
+
+#define D2D_DECLARE_PTR_PROPERTY_INFO(OWNER, TYPE, NAME, SETTER, GETTER)	\
+	_D2D_BEGIN_DECLARE_PROPERTY(OWNER, NAME)	\
+	_D2D_DECLAREE_PROPERTY_BASE(OWNER, TYPE, NAME)	\
 	virtual void SetValue(void* owner, void *property)	\
 	{	\
 		OWNER *typedOwner = static_cast<OWNER*>(owner);	\
@@ -42,63 +93,14 @@ public:	\
 		*value = static_cast<OWNER*>(owner)->GETTER();	\
 		return value;	\
 	}	\
-	bool Integral()	\
-	{	\
-		return IsIntegral<TYPE>::result;	\
-	}	\
-	bool IsArray()	\
-	{	\
-		return false;	\
-	}	\
+	bool Integral() { return IsIntegral<TYPE>::result; }	\
+	bool IsArray() { return false;	}	\
 	void PushValue(void *owner, void *value) { throw "pizdec"; }	\
 	unsigned GetArraySize(void *owner) { throw "pizdec"; }	\
 	void* GetValue(void *owner, unsigned index) { throw "pizdec"; }	\
-	static OwnedPropertyInfo##OWNER##NAME _instance;	\
-};	\
-OwnedPropertyInfo##OWNER##NAME OwnedPropertyInfo##OWNER##NAME::_instance;	\
+	_D2D_END_DECLARE_PROPERTY(OWNER, NAME)	\
 
-#define D2D_DECL_OWNED_PROPERTY_INFO(OWNER, TYPE, NAME)	\
-	D2D_DECL_OWNED_PROPERTY_INFO_EX(OWNER, TYPE, NAME, Set##NAME, Get##NAME)	\
+#define D2D_DECLARE_PROPERTY_INFO(OWNER, TYPE, NAME)	\
+	D2D_DECLARE_PROPERTY_INFO_EX(OWNER, TYPE, NAME, Set##NAME, Get##NAME)	\
 
-#define D2D_DECL_OWNED_ARRAY_PROPERTY_INFO_EX(OWNER, TYPE, NAME, PUSHER, GETTER, SIZEGETTER)	\
-class OwnedPropertyInfo##OWNER##NAME : public PropertyInfo	\
-{	\
-public:	\
-	OwnedPropertyInfo##OWNER##NAME()	\
-	{	\
-		TypeInfo::GetTypeInfo(#OWNER)->Properties()[#NAME] = &_instance;	\
-	}	\
-	virtual char* Name() const { return #NAME; }	\
-	virtual char* TypeName() const { return #TYPE; }	\
-	virtual char* OwnerName() const { return #OWNER; }	\
-	virtual void SetValue(void* owner, void *property)	\
-	{	\
-		throw("pizdec");	\
-	}	\
-	void* GetValue(void *owner) { throw "pizdec"; };	\
-	bool Integral()	\
-	{	\
-		return false;	\
-	}	\
-	bool IsArray()	\
-	{	\
-		return true;	\
-	}	\
-	void PushValue(void *owner, void *value)	\
-	{	\
-		static_cast<OWNER*>(owner)->PUSHER(*(static_cast<TYPE*>(value)));	\
-	}	\
-	unsigned GetArraySize(void *owner)	\
-	{	\
-		return static_cast<OWNER*>(owner)->SIZEGETTER();	\
-	}	\
-	void* GetValue(void *owner, unsigned index)	\
-	{	\
-		TYPE *value = new TYPE;	\
-		*value = static_cast<OWNER*>(owner)->GETTER(index);	\
-		return value;	\
-	}	\
-	static OwnedPropertyInfo##OWNER##NAME _instance;	\
-};	\
-OwnedPropertyInfo##OWNER##NAME OwnedPropertyInfo##OWNER##NAME::_instance;	\
 

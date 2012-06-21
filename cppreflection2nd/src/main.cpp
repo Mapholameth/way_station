@@ -25,6 +25,24 @@ using std::pair;
  *		Casted call
  */
 
+/**
+ *	One more case. This one shall be handled properly.
+ *	In CGameObject we have vector<CGameObject*> children; member
+ *	This one is array of ptr to CGameObject wich could be anything, like CPlaceable or CRenderable.
+ *	"Children" : [ {...}, {...}, {...} ] - will look like this in JSON
+ *	So. Where shall I put type information for each array member?
+ *	Apparently inside object.
+ *	How?
+ *	Apparently like { "Type" : "CPlaceableObject", ... }
+ *	Such solution is somewhat kludgy and ugly to me, but there is nothing better I could think of.
+ *	So rule shall be somewhat like: "If property is ptr to something and if that somthing has injected type info
+ *	(which means it is a class) and (optionally) that class has descendant(s) then it's json-object representation-table
+ *	has reserved key "Type" or somewhat like that, which describes actual type of the object.
+ *	and if that type is actually present and is derived from our property type so ptr to it could be casted back, then
+ *	we can. Yes. We. Can.
+ */
+
+
 /* shall be handy for some test
 
 typedef void (*FooCall)(const CFoo &foo);
@@ -76,18 +94,24 @@ void ShowToFile(void *o, char* name, char* filename)
 				map<string, PropertyInfo*> &props = typeInfo->Properties();
 				for (map<string, PropertyInfo*>::iterator i = props.begin(); i != props.end(); ++i)
 				{
+					map<string, PropertyInfo*>::iterator nextIter = ++i;
+					i--;
+
 					if (i->second->Integral())
 					{
 						void *value = i->second->GetValue(next);
 						std::string stringTypeName = i->second->TypeName();
-						TypeInfo* typeInfo = TypeInfo::GetTypeInfo(stringTypeName);
-						std::string stringValue = typeInfo->GetString(value);
+						TypeInfo* _typeInfo = TypeInfo::GetTypeInfo(stringTypeName);
+						std::string stringValue = _typeInfo->GetString(value);
+
 						state.s += RepeatString("\t", state.depth) +
 								   "\"" +
 								   i->second->Name() +
 								   "\" : \"" +
 								   stringValue.c_str() +
-								   "\",\n";
+								   "\"" +
+								   RepeatString(",", typeInfo->BaseInfo() != 0 || nextIter != props.end()) +
+									"\n";
 					}
 					else if (i->second->IsArray())
 					{
@@ -103,15 +127,20 @@ void ShowToFile(void *o, char* name, char* filename)
 							void *value = i->second->GetValue(next, j);
 							char floatStr[256];
 							sprintf(floatStr, "%f", *(static_cast<float*>(value)));
+
 							state.s += RepeatString("\t", state.depth) +
 									   "\"" +
 									   floatStr +
-									   "\",\n";
+									   "\"" +
+									   RepeatString(",", j != i->second->GetArraySize(next) - 1 ) +
+									   "\n";
 							delete value;
 						}
 						state.depth--;
 						state.s += RepeatString("\t", state.depth) +
-								   "],\n";
+								   "]" +
+								   RepeatString(",", nextIter != props.end() || typeInfo->BaseInfo()) +
+								   "\n";
 					}
 					else
 					{
@@ -128,7 +157,10 @@ void ShowToFile(void *o, char* name, char* filename)
 			}
 			state.depth--;
 			state.s += RepeatString( "\t", state.depth );
-			state.s += "},\n";
+			if (state.depth == 0)
+				state.s += "}\n";
+			else
+				state.s += "},\n";
 		}
 	};
 
@@ -156,6 +188,8 @@ void* EatShitFromJSONToCFoo(char* typeName, char* filename)
 	class T
 	{
 	public:
+		// Properly working breakpoints on windows with msvc10 and cdb inside static-function-inside-class-inside-function?
+		// Qt-Creator: "No, not heard."
 		static void* Helper(rapidjson::Document::ValueType* document, char *nextName)
 		{
 			bool isObject = document->IsObject();
@@ -171,6 +205,14 @@ void* EatShitFromJSONToCFoo(char* typeName, char* filename)
 				}
 				else if( i->value.IsArray())
 				{
+					for (int j = 0; j < i->value.Size(); j++)
+					{
+						TypeInfo *tempTypeInfo = TypeInfo::GetTypeInfo(prop->TypeName());
+						void *temp = tempTypeInfo->New();
+						tempTypeInfo->SetString(temp, i->value[j].GetString());
+						prop->PushValue(next, temp);
+						delete temp;
+					}
 				}
 				else
 				{
@@ -238,9 +280,13 @@ int main(int argc, char* argv[])
 	//Show(foo, "CFoo");
 
 	CBarDerived bar;
+	bar.PushToArray(1);
+	bar.PushToArray(2);
+	bar.PushToArray(3);
+	bar.PushToArray(4);
 	try
 	{
-		//ShowToFile(&bar, "CBarDerived", "dump.json");
+		ShowToFile(&bar, "CBarDerived", "dump.json");
 		void* value = EatShitFromJSONToCFoo("CBarDerived", "dump.json");
 		ShowToFile(value, "CBarDerived", "diff.json");
 	}
@@ -251,7 +297,9 @@ int main(int argc, char* argv[])
 
 	//Show(&bar, "CFoo");
 	//	printf("%s\r\n%s\r\n%s\r\n", position->Name(), position->OwnerName(), position->TypeName());
+	printf( "%s\n%s\n",
+			CFoo().GetTypeInfo()->Name(),
+			CBarDerived().GetTypeInfo()->Name());
 
-	system("pause");
 	return EXIT_SUCCESS;
 }

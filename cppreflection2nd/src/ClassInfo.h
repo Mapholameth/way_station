@@ -51,21 +51,21 @@ map<string, TypeInfo*> TypeInfo::_typeInfos;
 	public:	\
 
 #define _D2D_TYPE_INFO_DECL_BASE(TYPE)	\
-	TypeInfo##TYPE() { _typeInfos[#TYPE] = &_instance; }	\
-	void* New() const { return Make<TYPE>::New(); }	\
-	char* Name() const { return #TYPE; }	\
-	virtual void SetString(void *instance, const string &value)	\
-	{	\
-		TYPE *typedInstance = static_cast<TYPE*>(instance);	\
-		*typedInstance = From<TYPE>::String(value);	\
-	}	\
-	string GetString(void *instance)	\
-	{	\
-		TYPE *typedInstance = static_cast<TYPE*>(instance);	\
-		return To<TYPE>::String(*typedInstance);	\
-	}	\
-	PropertyInfo* GetProperty(const string &name) const { return _props[name]; }	\
-	map<string, PropertyInfo*>& Properties() { return _props; }	\
+		TypeInfo##TYPE() { _typeInfos[#TYPE] = &_instance; }	\
+		void* New() const { return Make<TYPE>::New(); }	\
+		char* Name() const { return #TYPE; }	\
+		virtual void SetString(void *instance, const string &value)	\
+		{	\
+			TYPE *typedInstance = static_cast<TYPE*>(instance);	\
+			*typedInstance = From<TYPE>::String(value);	\
+		}	\
+		string GetString(void *instance)	\
+		{	\
+			TYPE *typedInstance = static_cast<TYPE*>(instance);	\
+			return To<TYPE>::String(*typedInstance);	\
+		}	\
+		PropertyInfo* GetProperty(const string &name) const { return _props[name]; }	\
+		map<string, PropertyInfo*>& Properties() { return _props; }	\
 
 #define _D2D_END_TYPE_INFO_DECL(TYPE)	\
 	static TypeInfo##TYPE _instance;	\
@@ -76,15 +76,17 @@ map<string, PropertyInfo*> TypeInfo##TYPE::_props;	\
 
 #define D2D_DECL_TYPE_INFO(TYPE)	\
 	_D2D_BEGIN_TYPE_INFO_DECL(TYPE)	\
-		_D2D_TYPE_INFO_DECL_BASE(TYPE)	\
+	_D2D_TYPE_INFO_DECL_BASE(TYPE)	\
 		TypeInfo* BaseInfo() { return 0; }	\
 	_D2D_END_TYPE_INFO_DECL(TYPE)	\
 
 #define D2D_DECL_DERIVED_TYPE_INFO(TYPE_DERIVED, TYPE_BASE)	\
 	_D2D_BEGIN_TYPE_INFO_DECL(TYPE_DERIVED)	\
-		_D2D_TYPE_INFO_DECL_BASE(TYPE_DERIVED)	\
+	_D2D_TYPE_INFO_DECL_BASE(TYPE_DERIVED)	\
 		TypeInfo* BaseInfo() { return _typeInfos[#TYPE_BASE]; }	\
 	_D2D_END_TYPE_INFO_DECL(TYPE_DERIVED)	\
 
+#define D2D_INJECT_TYPE_INFO(TYPE)	\
+	public:	\
+	virtual TypeInfo* GetTypeInfo() const { return TypeInfo::GetTypeInfo(#TYPE); }	\
 
-//static CLASS_NAME* New() { return Make<CLASS_NAME>::New(); }	\
