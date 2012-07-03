@@ -17,12 +17,13 @@ using std::pair;
  *	X	integral type properties
  *		safety
  *	-	named cast	-	practically impossible to achieve
- *	X	array properies
- *		ptr to type properties
+ *	X	array properties
+ *	X	ptr to type properties
  *		multiple (de)serialization methods
  *		multiple inheritance
  *		RTTI::IsKindOf(foo, bar)
  *		Casted call
+ *		single serialization of object referenced by multiple pointers
  */
 
 /**

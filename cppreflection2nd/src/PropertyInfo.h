@@ -78,19 +78,19 @@ public:
 		}	\
 	_D2D_END_DECLARE_PROPERTY(OWNER, NAME)	\
 
-#define D2D_DECLARE_PTR_PROPERTY_INFO(OWNER, TYPE, NAME, SETTER, GETTER)	\
+#define D2D_DECLARE_PTR_PROPERTY_INFO_EX(OWNER, TYPE, NAME, SETTER, GETTER)	\
 	_D2D_BEGIN_DECLARE_PROPERTY(OWNER, NAME)	\
 	_D2D_DECLAREE_PROPERTY_BASE(OWNER, TYPE, NAME)	\
 	virtual void SetValue(void* owner, void *property)	\
 	{	\
 		OWNER *typedOwner = static_cast<OWNER*>(owner);	\
 		TYPE *typedProperty = static_cast<TYPE*>(property);	\
-		typedOwner->SETTER(*typedProperty);	\
+		typedOwner->SETTER(typedProperty);	\
 	}	\
 	void* GetValue(void *owner)	\
 	{	\
 		TYPE *value = new TYPE;	\
-		*value = static_cast<OWNER*>(owner)->GETTER();	\
+		value = static_cast<OWNER*>(owner)->GETTER();	\
 		return value;	\
 	}	\
 	bool Integral() { return IsIntegral<TYPE>::result; }	\
@@ -99,6 +99,9 @@ public:
 	unsigned GetArraySize(void *owner) { throw "pizdec"; }	\
 	void* GetValue(void *owner, unsigned index) { throw "pizdec"; }	\
 	_D2D_END_DECLARE_PROPERTY(OWNER, NAME)	\
+
+#define D2D_DECLARE_PTR_PROPERTY_INFO(OWNER, TYPE, NAME)	\
+	D2D_DECLARE_PTR_PROPERTY_INFO_EX(OWNER, TYPE, NAME, Set##NAME, Get##NAME)	\
 
 #define D2D_DECLARE_PROPERTY_INFO(OWNER, TYPE, NAME)	\
 	D2D_DECLARE_PROPERTY_INFO_EX(OWNER, TYPE, NAME, Set##NAME, Get##NAME)	\
