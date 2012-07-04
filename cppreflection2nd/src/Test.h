@@ -11,6 +11,8 @@ using std::map;
 class Vector2
 {
 public:
+	Vector2(){}
+	Vector2(float x, float y) : _x(x), _y(y) {}
 	void SetX(const float &x) { _x = x; }
 	void SetY(const float &y) { _y = y; }	
 	float GetX() const { return _x; }
@@ -60,9 +62,12 @@ class CBarDerived : public CFoo
 public:
 	int GetH() const { return _h; }
 	void SetH(const int &h) { _h = h; }
+	CBarDerived* GetSingleBarPtr() const { return _singleBarPtr; }
+	void SetSingleBarPtr( CBarDerived* rhs ) { _singleBarPtr = rhs; }
 
 private:
 	int _h;
+	CBarDerived* _singleBarPtr;
 };
 
 template<typename T>

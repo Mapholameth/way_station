@@ -57,14 +57,15 @@ void TestFooCall(const CFoo &foo)
 
 void ShowToFile(void *o, char* name, char* filename)
 {
-
 	class CStateInfo
 	{
 	public:
 		int depth;
 		string s;
+		std::map<void*, int> addresTable;
+		int ptrCount;
 
-		CStateInfo() : depth(0), s("") {}
+		CStateInfo() : depth(0), s(""), ptrCount(0) {}
 		void SaveToFile(const string& filename)
 		{
 			FILE* fo = fopen(filename.c_str(), "w");
@@ -100,6 +101,10 @@ void ShowToFile(void *o, char* name, char* filename)
 
 					if (i->second->Integral())
 					{
+						if ( i->second->IsPointer() )
+						{
+							printf( "we are here ");
+						}
 						void *value = i->second->GetValue(next);
 						std::string stringTypeName = i->second->TypeName();
 						TypeInfo* _typeInfo = TypeInfo::GetTypeInfo(stringTypeName);
@@ -149,9 +154,54 @@ void ShowToFile(void *o, char* name, char* filename)
 								   "\"" +
 								   i->second->Name() +
 								   "\" : \n";
-						void *value = i->second->GetValue(next);
-						Helper(state, value, i->second->TypeName());
-						delete value;
+						bool alreadySerialized = false;
+						bool nullPtr = false;
+						if ( i->second->IsPointer() )
+						{
+							if (i->second->GetValue(next) == 0)
+								nullPtr = true;
+							if (nullPtr)
+							{
+								state.s += "0";
+							}
+							else
+							{
+								alreadySerialized = state.addresTable.count( i->second->GetValue(next) ) == 1;
+								if (alreadySerialized)
+								{
+									state.s += "\"@ptr" +
+											   To<int>::String( state.addresTable[ i->second->GetValue(next) ] ) +
+											   "\",\n";
+								}
+								else
+								{
+									state.ptrCount++;
+									state.addresTable[ i->second->GetValue(next) ] = state.ptrCount;
+									state.s += RepeatString("\t", state.depth) +
+											   "{\n" +
+											   RepeatString("\t", state.depth + 1) +
+											   "\"@ptr\" : " +
+											   To<int>::String(state.ptrCount) +
+											   ",\n" +
+											   RepeatString("\t", state.depth + 1) +
+											   "\"@value\" :\n";
+									state.depth++;
+								}
+							}
+						}
+						if (!alreadySerialized && !nullPtr)
+						{
+							void *value = i->second->GetValue(next);
+							Helper(state, value, i->second->TypeName());
+							if ( i->second->IsPointer() )
+							{
+								state.depth--;
+								state.s += RepeatString("\t", state.depth) +
+										   "}\n";
+							}
+							else
+								delete value;
+						}
 					}
 				}
 				typeInfo = typeInfo->BaseInfo();
@@ -285,11 +335,20 @@ int main(int argc, char* argv[])
 	bar.PushToArray(2);
 	bar.PushToArray(3);
 	bar.PushToArray(4);
+	CFoo a, b, c;
+	bar.PushChild(&a);
+	bar.PushChild(&b);
+	bar.PushChild(&c);
+	bar.SetPtrPosition(new Vector2(4.0f, 8.0f));
+	CBarDerived oneMoreBar;
+	bar.SetSingleBarPtr(&oneMoreBar);
+	oneMoreBar.SetSingleBarPtr(0);
+	oneMoreBar.SetPtrPosition(bar.GetPtrPosition());
 	try
 	{
 		ShowToFile(&bar, "CBarDerived", "dump.json");
-		void* value = EatShitFromJSONToCFoo("CBarDerived", "dump.json");
-		ShowToFile(value, "CBarDerived", "diff.json");
+		//void* value = EatShitFromJSONToCFoo("CBarDerived", "dump.json");
+		//ShowToFile(value, "CBarDerived", "diff.json");
 	}
 	catch(char* pizdec)
 	{
