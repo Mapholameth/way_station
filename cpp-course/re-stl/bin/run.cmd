@@ -1,0 +1,1 @@
+reSTL.Release.exe>out.txt & start out.txt

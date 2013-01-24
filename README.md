@@ -19,6 +19,13 @@ It's a university task of making simple C language compiler.
 
 This one isn't finished and performs only lexical analysis.
 
+### cpp-course
+
+-
+
+C plus plus language course tasks.
+All together it's an STL styled implementation of string, array, list, hashmap, trie, kd-tree, skip-list, balanced-tree-map -classes.
+
 ### cppreflection
 
 -
