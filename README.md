@@ -4,6 +4,13 @@ This repository was made as a holder for my university, home, test and pet proje
 
 Below is a brief description of each.
 
+### assembly-language-course
+
+-
+
+University tasks from our assembly language course.
+Actually only two present: optimization of matrix multiplication and usage of cpuid instruction.
+
 ### Compiler
 
 -
