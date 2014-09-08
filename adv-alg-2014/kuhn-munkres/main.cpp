@@ -45,7 +45,7 @@ bool dfsKuhn(int v)
     }
   }
 
-  visited[v] = false;
+  return false;
 }
 
 int main()
@@ -88,6 +88,10 @@ int main()
 
   for (int i = 0; i < m; i++)
   {
+    for (int j = 0; j < m; j++)
+    {
+      visited[j] = false;
+    }
     dfsKuhn(i);
   }
 
