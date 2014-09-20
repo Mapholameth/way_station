@@ -115,4 +115,3 @@ int main()
   fclose(fo);
   return 0;
 }
-
