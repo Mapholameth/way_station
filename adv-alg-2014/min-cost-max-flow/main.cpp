@@ -17,7 +17,13 @@ int edges[maxN][maxN];
 
 int main()
 {
-  memset(edges, infWeight, maxN * maxN);
+  for (int i = 0; i < maxN; i++)
+  {
+    for (int j = 0; j < maxN; j++)
+    {
+      edges[i][j] = infWeight;
+    }
+  }
 
   FILE* fi = fopen("input.txt", "r");
   fscanf(fi, "%d%d%d", &n, &m, &s);
@@ -34,9 +40,10 @@ int main()
 
   for (int i = 0; i < n; i++)
   {
-    edges[i][i] = 0;
-    distance[i] = edges[s][i];
+    distance[i] = infWeight;
   }
+
+  distance[s] = 0;
 
   for (int i = 0; i < n; i++)
   {
@@ -45,12 +52,13 @@ int main()
     for (int j = 0; j < n; j++)
     {
       if (!visited[j]
-          && minWeight > distance[j])
+          && distance[j] < minWeight)
       {
         minWeight = distance[j];
         v = j;
       }
     }
+
     if (v == -1)
     {
       break;
@@ -60,7 +68,7 @@ int main()
     for (int u = 0; u < n; u++)
     {
       if (!visited[u]
-          && edges[v][u] != -1)
+          && edges[v][u] != infWeight)
       {
         if (distance[u] > distance[v] + edges[v][u])
         {
