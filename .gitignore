@@ -1,3 +1,4 @@
 *build*
 *.pro.user
 output.txt
+/adv-alg-2014/min-cost-max-flow/bin/brides.out
