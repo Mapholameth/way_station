@@ -16,7 +16,7 @@ int remainder = 0;
 int activeNode = 0;
 int activeEdge = 0;
 int activeLength = 0;
-char text[MAXN];
+unsigned char text[MAXN + 1];
 
 struct Node
 {
@@ -44,7 +44,7 @@ int MakeNewNode(int start, int end = oo)
   return lastAdded;
 }
 
-char GetActiveEdge()
+unsigned char GetActiveEdge()
 {
   return text[activeEdge];
 }
@@ -129,13 +129,13 @@ void PushLetter()
   }
 }
 
-void Print(int node_id, int l = 0)
+void Print(int nodeId, int l = 0)
 {
   for (int i = 0; i < 256; i++)
   {
-    if (tree[node_id].next[i] != 0)
+    if (tree[nodeId].next.count(i) != 0)
     {
-      Node e = tree[tree[node_id].next[i]];
+      Node e = tree[tree[nodeId].next[i]];
       for (int j = 0; j < l; j++)
       {
         printf("  ");
@@ -148,7 +148,7 @@ void Print(int node_id, int l = 0)
         printf("%c", text[j]);
       }
       printf("\n");
-      Print(tree[node_id].next[i], l + 1);
+      Print(tree[nodeId].next[i], l + 1);
     }
   }
   if (l == 0)
@@ -189,7 +189,7 @@ bool CheckWord(unsigned char* word)
     }
     n = tree[n.next[letter]];
     letter = word[i];
-    if (n.next[letter] == 0
+    if (n.next.count(letter) == 0
         && letter != 0)
     {
       return 0;
@@ -214,7 +214,7 @@ int main()
 
   int n;
   fscanf(fi, "%d", &n);
-  unsigned char word[1000];
+  unsigned char word[1001];
 
   FILE* fo = fopen("output.txt", "w");
 
