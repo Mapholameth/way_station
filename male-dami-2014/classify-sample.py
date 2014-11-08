@@ -69,7 +69,10 @@ for i in range(len(r)):
     r_map[classIndex][1].append(r[i][1])
 
 for i in range(m + 1):
-    plt.scatter(r_map[i][0], r_map[i][1], color=r_colors[i], alpha=0.3)
+    alpha = 0.3
+    if i == m:
+        alpha = 1.0
+    plt.scatter(r_map[i][0], r_map[i][1], color=r_colors[i], alpha=alpha)
 
 plt.grid(True)
 plt.show()
