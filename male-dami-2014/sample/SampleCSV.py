@@ -7,8 +7,6 @@ class SampleCSV:
     """Read data from csv file and transform it
     """
     def __init__(self, filename):
-        csv_file = open(filename)
-
         reader = csv.reader(open(filename), dialect="excel")
 
         self.class_count = 0
