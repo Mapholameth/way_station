@@ -16,22 +16,7 @@ typedef long long int __int64;
 
 using namespace std;
 
-static const unsigned m_size = 8;
-
-auto measure = [](std::function<void()> f)
-{
-  const int totalAttempts = 10;
-  double minTime = std::numeric_limits<double>::max();
-  for (int tries = 0; tries < totalAttempts; tries++)
-  {
-    std::cout << tries << "..";
-    clock_t begin = clock();
-    f();
-    clock_t end = clock();
-    minTime = std::min(double(end - begin) / CLOCKS_PER_SEC, minTime);
-  }
-  std::cout << "elapsed " << minTime * 1000 << " ms " << std::endl;
-};
+static const unsigned m_size = 16;
 
 void fill_matrix(double m[m_size][m_size])
 {
@@ -71,6 +56,8 @@ int main(int argc, char *argv[])
   int j;
   int k;
 
+  clock_t time_begin = clock();
+
   MPI_Init (&argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
   MPI_Comm_size(MPI_COMM_WORLD, &proc_count);
@@ -104,10 +91,8 @@ int main(int argc, char *argv[])
     }
   }
 
-  measure([&](){
-    MPI_Gather(pes, m_size * m_size /proc_count, MPI_DOUBLE,
-               C, m_size * m_size / proc_count, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  });
+  MPI_Gather(pes, m_size * m_size /proc_count, MPI_DOUBLE,
+             C, m_size * m_size / proc_count, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
   if (my_rank == 0)
   {
@@ -121,5 +106,12 @@ int main(int argc, char *argv[])
   }
 
   MPI_Finalize();
+
+  if (my_rank == 0)
+  {
+    std::cout << "elapsed " << double(clock() - time_begin) / CLOCKS_PER_SEC * 1000
+              << " ms " << std::endl;
+  }
+
   return 0;
 }
