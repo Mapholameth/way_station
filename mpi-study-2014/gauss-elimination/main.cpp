@@ -12,7 +12,7 @@
 
 using namespace std;
 
-static const int m_size = 12;
+static const int m_size = 2048;
 
 double A[m_size][m_size];
 double b[m_size];
