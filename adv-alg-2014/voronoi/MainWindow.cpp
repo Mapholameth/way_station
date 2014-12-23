@@ -476,7 +476,7 @@ void MainWindow::BruteForceVoronoi()
       }
       Vector2 center = (points[i] + points[j]) * 0.5f;
       Vector2 perp = (points[i] - points[j]).GetPerpendicular();
-      if (perp.Length() < 0.0001f)
+      if (perp.Length() == 0.0f)
       {
         continue;
       }

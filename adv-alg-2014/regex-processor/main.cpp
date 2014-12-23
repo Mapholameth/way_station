@@ -80,8 +80,9 @@ int main()
       {
         failedCount++;
         printf("fail: test %d.%d (%d): %s - %s : %d\n", testMajorIdx
-               , testMinorIdx, testCount, regex, s, referenceAnswer);
+             , testMinorIdx, testCount, regex, s, referenceAnswer);
       }
+//      else printf("win: %s - %s : %d\n", regex, s, referenceAnswer);
       testMinorIdx++;
       testCount++;
     }
@@ -207,7 +208,15 @@ bool ClassifyString(NodePtr root, char* s)
 
     for (auto node : front)
     {
-      node->PredictNext(sPtr[0], next, 1);
+      if (isalnum(node->letter)
+          && node->followup != nullptr)
+      {
+        node->followup->PredictNext(sPtr[0], next, 1);
+      }
+      else
+      {
+        node->PredictNext(sPtr[0], next, 1);
+      }
     }
     sPtr++;
     front = next;
@@ -224,31 +233,56 @@ bool ClassifyString(NodePtr root, char* s)
   return !front.empty();
 }
 
-bool Node::PredictNext(char newLetter, unordered_set<NodePtr>& reachable, int lookAhead)
+bool Node::PredictNext(char newLetter
+                     , unordered_set<NodePtr>& reachable
+                     , int lookAhead)
 {
   bool r = false;
 
   if ((isalnum(letter)
        || letter == 0)
-      && newLetter == letter)
+      && newLetter == letter
+      /*&& lookAhead == 0*/)
   {
     r = true;
-//    reachable.insert(shared_from_this());
+    reachable.insert(shared_from_this());
   }
   else if (letter == '|')
   {
-    for (auto node : next)
+    for (int i = 0; i < next.size(); i++)
     {
+      NodePtr node = next[i];
       r |= node->PredictNext(newLetter, reachable, lookAhead);
-    }
-    if (r)
-    {
-      reachable.insert(shared_from_this());
     }
   }
   else if (letter == '*')
   {
-    r = this->next.front()->PredictNext(newLetter, reachable, lookAhead);
+    NodePtr temp = shared_from_this();
+    NodePtr start = temp;
+    do
+    {
+      r = temp->next.front()->PredictNext(newLetter, reachable, lookAhead);
+      temp = temp->followup;
+    } while (!r
+             && temp != nullptr
+             && temp->letter == '*'
+             && temp != start);
+
+    if (!r
+        && temp != nullptr
+        && temp->letter != '*')
+    {
+      temp->PredictNext(newLetter, reachable, lookAhead - 1);
+    }
+  }
+
+  if (r
+      && followup != nullptr
+      && followup->followup != nullptr
+      && followup->followup->parent != nullptr
+      && followup->followup->parent->letter == '*')
+  {
+    reachable.insert(followup->followup->parent);
   }
 
   if (followup != nullptr
@@ -259,13 +293,7 @@ bool Node::PredictNext(char newLetter, unordered_set<NodePtr>& reachable, int lo
     bool fr = followup->PredictNext(newLetter, reachable, lookAhead);
     if (fr)
     {
-      reachable.insert(followup);
-      if (followup->followup != nullptr
-          && followup->followup->parent != nullptr
-          && followup->followup->parent->letter == '*')
-      {
-        reachable.insert(followup->followup->parent);
-      }
+      //reachable.insert(followup);
     }
   }
 
