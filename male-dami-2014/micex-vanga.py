@@ -2,13 +2,12 @@ import random
 import csv
 
 from pybrain.tools.shortcuts import buildNetwork
+from pybrain.structure import RecurrentNetwork
 from pybrain.structure.modules import TanhLayer, SoftmaxLayer, GaussianLayer,\
     SigmoidLayer, LinearLayer, GateLayer
 from pybrain.datasets import SupervisedDataSet
 from pybrain.supervised.trainers import BackpropTrainer
 from pybrain.supervised.trainers import RPropMinusTrainer
-
-from pykalman import KalmanFilter
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -43,10 +42,11 @@ for row in reader:
   closePrice.append(row[5])
   volumeSold.append(row[6])
 
-windowSize = 9 * 2
+windowSize = 9 * 4
 
- net = buildNetwork(windowSize, windowSize * 4, windowSize * 4, 1, hiddenclass=SoftmaxLayer)
+net = buildNetwork(windowSize, 8, 4, 2, 1, hiddenclass=SigmoidLayer) 
 ds = SupervisedDataSet(windowSize, 1)
+# , recurrent=True
 
 n = windowSize * 8
 
@@ -54,12 +54,12 @@ for i in range(n):
     if i >= windowSize:
       ds.addSample(([closePrice[i - (windowSize - j)] for j in range(windowSize)]), (closePrice[i]))
 
-# trainer = BackpropTrainer(net, ds) #, learningrate=0.01, lrdecay=1.0, momentum=0.0, weightdecay=0.0)
-trainer = RPropMinusTrainer(net, dataset=ds)
-for i in range(1000):
+trainer = BackpropTrainer(net, ds) #, learningrate=0.01, lrdecay=1.0, momentum=0.0, weightdecay=0.0)
+# trainer = RPropMinusTrainer(net, dataset=ds)
+for i in range(100):
     print('error: ', trainer.train(), '\n')
 
-print('error: ', trainer.trainUntilConvergence())
+# print('error: ', trainer.trainUntilConvergence())
 
 y = []
 y_n = []
