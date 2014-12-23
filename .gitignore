@@ -4,4 +4,6 @@ output.txt
 *.exe
 *.p
 *.*~
+__pycache__
+.ipynb_checkpoints
 
