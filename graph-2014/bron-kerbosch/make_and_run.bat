@@ -1,0 +1,1 @@
+make.bat & cp 02.in input.txt & main.exe | less
