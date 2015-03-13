@@ -6,9 +6,12 @@
 
 using namespace std;
 
+// int cutoff_bonus = 0;
+
 unordered_map<int, vector<int>> adjacent_vertices;
 typedef unordered_set<int> v_set;
 
+// r = c0 U c1
 void unite(const std::vector<int>& c0, const v_set& c1, v_set& r)
 {
   for (const auto& n : c0)
@@ -17,6 +20,16 @@ void unite(const std::vector<int>& c0, const v_set& c1, v_set& r)
     {
       r.insert(n);
     }
+  }
+}
+
+// r = a \ b
+void set_diff(const v_set& a, const std::vector<int>& b, v_set& r)
+{
+  r = a;
+  for (const auto& i : b)
+  {
+    r.erase(i);
   }
 }
 
@@ -34,9 +47,18 @@ void BronKerbosch(v_set R, v_set P, v_set X)
     return;
   }
 
-  while (!P.empty())
+  if (P.empty())
   {
-    int v = *P.begin();
+    return;
+  }
+
+  int pivot = *P.begin();
+  v_set Pdn;
+  set_diff(P, adjacent_vertices[pivot], Pdn);
+  // cutoff_bonus += (P.size() - Pdn.size());
+  while (!Pdn.empty())
+  {
+    int v = *Pdn.begin();
     v_set R1 = R;
     v_set P1;
     v_set X1;
@@ -48,6 +70,7 @@ void BronKerbosch(v_set R, v_set P, v_set X)
 
     BronKerbosch(R1, P1, X1);
 
+    Pdn.erase(v);
     P.erase(v);
     X.insert(v);
   }
@@ -95,5 +118,7 @@ int main()
   }
 
   BronKerbosch(v_set(), pInit, v_set());
+
+  // printf("cutoff bonus: %d\n", cutoff_bonus);
   return 0;
 }
